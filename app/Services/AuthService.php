@@ -24,12 +24,17 @@ class AuthService
     public function register(array $data)
     {
         $user = $this->auth->register($data);
-        $token = JWTAuth::fromUser($user);
-
+       
+        $accessToken = JWTAuth::fromUser($user); // corto
+        $refreshToken = JWTAuth::customClaims(['typ' => 'refresh'])->fromUser($user); // simulado
+    
         return [
             'user' => $user,
-            'token' => $token,
+            'token' => $accessToken,
+            'refresh_token' => $refreshToken,
         ];
+
+       
     }
 
     public function login(array $credentials)
@@ -37,12 +42,15 @@ class AuthService
         if (!$token =  JWTAuth::attempt($credentials)) {
             return response()->json(['error' => 'Invalid credentials'], 401);
         }
+        $user=$this->auth->login($credentials);
 
-        $user = auth()->user();
-
+        $accessToken = JWTAuth::fromUser($user); // corto
+        $refreshToken = JWTAuth::customClaims(['typ' => 'refresh'])->fromUser($user); // simulado
+    
         return [
             'user' => $user,
-            'token' => $token,
+            'token' => $accessToken,
+            'refresh_token' => $refreshToken,
         ];
     }
 

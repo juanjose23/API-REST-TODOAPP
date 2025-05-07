@@ -7,6 +7,7 @@ use App\Services\AuthService;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Facades\JWTAuth;
 class AuthController extends Controller
 {
@@ -101,6 +102,34 @@ class AuthController extends Controller
                 'message' => 'Something went wrong.',
                 'error' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    public function refresh(Request $request)
+    {
+        try {
+            $refreshToken = $request->bearerToken();
+
+            // Validar y autenticar con el token
+            $payload = JWTAuth::setToken($refreshToken)->getPayload();
+
+            // Validar que sea un token de tipo "refresh"
+            if ($payload->get('typ') !== 'refresh') {
+                return response()->json(['error' => 'Invalid token type'], 401);
+            }
+
+            // Obtener el usuario desde el token
+            $user = JWTAuth::setToken($refreshToken)->toUser();
+
+            // Generar nuevo access token
+            $newAccessToken = JWTAuth::fromUser($user);
+
+            return response()->json([
+                'access_token' => $newAccessToken,
+            ]);
+
+        } catch (JWTException $e) {
+            return response()->json(['error' => 'Token invalid or expired'], 401);
         }
     }
     public function resetPassword(Request $request)
