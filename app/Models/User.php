@@ -35,6 +35,7 @@ class User extends Authenticatable implements JWTSubject
         'name',
         'email',
         'password',
+        'avatar',
     ];
 
     /**
@@ -59,19 +60,28 @@ class User extends Authenticatable implements JWTSubject
             'password' => 'hashed',
         ];
     }
-     // relaciones
-     public function tasksCreated()
-     {
-         return $this->hasMany(Task::class, 'creator_id');
-     }
- 
-     public function tasksAssigned()
-     {
-         return $this->hasMany(Task::class, 'assigned_to_id');
-     }
- 
-     public function teams()
-     {
-         return $this->belongsToMany(Team::class);
-     }
+    // relaciones
+    public function tasksCreated()
+    {
+        return $this->hasMany(Task::class, 'creator_id');
+    }
+
+    public function tasksAssigned()
+    {
+        return $this->hasMany(Task::class, 'assigned_to_id');
+    }
+
+    public function teams()
+    {
+        return $this->belongsToMany(Team::class);
+    }
+
+    public function teamsCreated()
+    {
+        return $this->hasMany(Team::class, 'user_id');
+    }
+    public function invitations()
+    {
+        return $this->hasMany(Invitation::class);
+    }
 }

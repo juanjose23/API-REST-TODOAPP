@@ -1,20 +1,26 @@
 <?php
 
+use App\Http\Controllers\TeamsController;
 use App\Http\Controllers\TwitterController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use Illuminate\Support\Facades\Password;
 
-use Illuminate\Support\Str;
+
 Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
-    Route::post('user', [AuthController::class, 'user']);
+    
     Route::post('/logout', [AuthController::class, 'logout']);
 
     Route::post('/forgot-password', [AuthController::class, 'sendPasswordResetLink']);
     Route::post('/password-reset', [AuthController::class, 'resetPassword'])->name('password.reset');
+
+});
+Route::get('/users', [AuthController::class, 'users'])->name('users');
+
+Route::middleware('jwt')->prefix('teams')->group(function (){
+    Route::post('/create',[TeamsController::class,'createTeam'])->name('teams.create');
+    Route::get('/teams',[TeamsController::class,'teams'])->name('teams.teams');
 
 });
 

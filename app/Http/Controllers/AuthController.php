@@ -7,6 +7,7 @@ use App\Services\AuthService;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Tymon\JWTAuth\Facades\JWTAuth;
 class AuthController extends Controller
 {
     //
@@ -16,21 +17,27 @@ class AuthController extends Controller
     {
         $this->authService = $authService;
         ResetPassword::createUrlUsing(function ($user, string $token) {
-            return url( env('FRONT_URL').'/auth/reset-password/'.$token.'?email=' . urlencode($user->email));
+            return url(env('FRONT_URL') . '/auth/reset-password/' . $token . '?email=' . urlencode($user->email));
         });
-        
+
+    }
+    public function users()
+    {
+        // Logic to get all users
+        $users = $this->authService->getAllUsers();
+        return response()->json($users, 200);
     }
     public function register(Request $request)
     {
         $validatedData = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|string|email|unique:users',
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|unique:users',
             'password' => 'required|string|min:8|confirmed',
         ]);
-       
+
         try {
             $result = $this->authService->register($validatedData);
-    
+
             return response()->json($result, 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -39,12 +46,12 @@ class AuthController extends Controller
             ], 500);
         }
     }
-    
+
 
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email'    => 'required|string|email',
+            'email' => 'required|string|email',
             'password' => 'required|string',
         ]);
 
@@ -52,51 +59,50 @@ class AuthController extends Controller
 
         if (!$result) {
             return response()->json(['message' => 'Invalid credentials'], 401);
-        }   
+        }
 
-        return response()->json($result,201);
+        return response()->json($result, 201);
     }
 
 
     public function logout(Request $request)
     {
-        Auth::logout(); 
-        auth()->invalidate(true);
-        return response()->json(['message' => 'Successfully logged out'],200);
+        JWTAuth::invalidate(JWTAuth::getToken());
+        return response()->json(['message' => 'Successfully logged out'], 200);
     }
 
-   
-public function sendPasswordResetLink(Request $request)
-{
-    try {
-        $request->validate([
-            'email' => 'required|email|exists:users,email',
-        ]);
 
-        $status = Password::sendResetLink($request->only('email'));
+    public function sendPasswordResetLink(Request $request)
+    {
+        try {
+            $request->validate([
+                'email' => 'required|email|exists:users,email',
+            ]);
 
-        if ($status === Password::RESET_LINK_SENT) {
+            $status = Password::sendResetLink($request->only('email'));
+
+            if ($status === Password::RESET_LINK_SENT) {
+                return response()->json([
+                    'message' => __($status)
+                ], 200);
+            }
+
             return response()->json([
                 'message' => __($status)
-            ], 200);
+            ], 422);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Validation failed.',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Something went wrong.',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        return response()->json([
-            'message' => __($status)
-        ], 422);
-
-    } catch (ValidationException $e) {
-        return response()->json([
-            'message' => 'Validation failed.',
-            'errors' => $e->errors()
-        ], 422);
-    } catch (\Throwable $e) {
-        return response()->json([
-            'message' => 'Something went wrong.',
-            'error' => $e->getMessage()
-        ], 500);
     }
-}
     public function resetPassword(Request $request)
     {
         $request->validate([
@@ -104,13 +110,13 @@ public function sendPasswordResetLink(Request $request)
             'email' => 'required|email',
             'password' => 'required|min:8',
         ]);
-    
+
         // Aquí pasas la solicitud al servicio para restablecer la contraseña
         $status = $this->authService->resetPassword($request->only('email', 'password', 'token'));
-    
+
         return $status === \Illuminate\Support\Facades\Password::PASSWORD_RESET
             ? response()->json(['status' => __($status)])
             : response()->json(['error' => __($status)], 400);
     }
-    
+
 }

@@ -10,6 +10,7 @@ class Team extends Model
     protected $fillable = [
         'name',
         'description',
+        'user_id',
         'is_active',
     ];
     public function users()
@@ -21,4 +22,14 @@ class Team extends Model
     {
         return $this->hasMany(Task::class);
     }
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function invitations()
+    {
+        return $this->hasMany(Invitation::class);
+    }
+
 }

@@ -11,12 +11,18 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Auth\Events\PasswordReset;
 class AuthRepository implements AuthInterface
 {
+    public function getAllUsers()
+    {
+        return User::select('id','name','email','avatar')->where('is_active', true)->get();
+    }
+
     public function register(array $data)
     {
         return User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
+            'is_active' => true,
         ]);
     }
 

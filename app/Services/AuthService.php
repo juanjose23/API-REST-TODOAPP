@@ -16,6 +16,11 @@ class AuthService
         $this->auth = $auth;
     }
 
+    public function getAllUsers()
+    {
+        return $this->auth->getAllUsers();
+    }
+
     public function register(array $data)
     {
         $user = $this->auth->register($data);
@@ -29,8 +34,8 @@ class AuthService
 
     public function login(array $credentials)
     {
-        if (!$token = auth()->attempt($credentials)) {
-            return null;
+        if (!$token =  JWTAuth::attempt($credentials)) {
+            return response()->json(['error' => 'Invalid credentials'], 401);
         }
 
         $user = auth()->user();
