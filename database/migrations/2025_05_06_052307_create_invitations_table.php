@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('team_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('role')->default('member'); // Puedes agregar un rol de invitado
+            $table->enum('roles', ['member', 'gues', 'owner','admin'])->default('member');
+            $table->string('token')->unique();
             $table->enum('status', ['pending', 'accepted', 'declined'])->default('pending'); // Estado de la invitación
             $table->timestamps();
         });

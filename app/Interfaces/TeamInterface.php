@@ -6,6 +6,7 @@ interface TeamInterface
     public function updateTeam($team, array $data);
     public function deleteTeam($team);
     public function inviteUserToTeam($team, $userId);
+    public function acceptInvitation($token);
     public function getAllTeams($userId);
     public function getTeamById($id);
     public function addMemberToTeam($team, $userId, $role);

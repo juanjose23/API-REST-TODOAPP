@@ -7,6 +7,7 @@ use App\Models\Team;
 use App\Models\User;
 use App\Notifications\TeamInvitationNotification;
 use Illuminate\Support\Facades\Mail;
+use Str;
 
 class TeamRepository implements TeamInterface
 {
@@ -15,8 +16,6 @@ class TeamRepository implements TeamInterface
         // Logic to create a team
         Team::create($data);
         return Team::latest()->first();
-
-
     }
 
     public function updateTeam($team, array $data)
@@ -55,22 +54,33 @@ class TeamRepository implements TeamInterface
 
     public function inviteUserToTeam($team, $userId)
     {
-        //Debug teams
-        \Log::info($team);
-        // Logic to invite a user to a team
         $invitation = Invitation::create([
             'team_id' => $team->id,
             'user_id' => $userId,
-            'role' => 'member',
+            'roles' => 'member',
+            'token' => Str::random(8),
             'status' => 'pending'
         ]);
-        // Send email or notification to the user about the invitation
-        $user = User::find($userId);
-        $user->notify(new TeamInvitationNotification($team));
+
+        try {
+            $user = User::findOrFail($userId);
+            $user->notify(new TeamInvitationNotification($invitation));
+        } catch (\Throwable $e) {
+            \Log::error("Error enviando invitación: " . $e->getMessage());
+
+        }
+
         return $invitation;
-
-
     }
+
+    public function acceptInvitation($token)
+    {
+        
+        return Invitation::with('team')
+            ->where('token', $token)
+            ->first();
+    }
+    
 
     public function removeMemberFromTeam($team, $userId)
     {

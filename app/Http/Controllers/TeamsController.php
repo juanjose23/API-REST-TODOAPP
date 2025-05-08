@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateTeamRequest;
+use App\Http\Requests\InvitationRequest;
+use App\Models\Invitation;
 use App\Services\TeamServices;
 use Illuminate\Http\Request;
+use Tymon\JWTAuth\Contracts\Providers\Auth;
 
 class TeamsController extends Controller
 {
@@ -28,7 +31,7 @@ class TeamsController extends Controller
         $data = $request->validated();
         $team = $this->teamServices->createTeam($data);
         return response()->json($team, 201);
-        
+
     }
     public function updateTeam(Request $request, $id)
     {
@@ -56,5 +59,13 @@ class TeamsController extends Controller
     {
         // Logic to remove a member from a team
     }
+
+    public function acceptInvitation(string $token)
+    {
+        \Log::info($token);
+        $invitation = $this->teamServices->acceptInvitation($token);
+        return response()->json($invitation, 201);
+    }
+
 
 }

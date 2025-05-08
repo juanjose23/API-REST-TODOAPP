@@ -6,16 +6,15 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\Facades\URL;
-class TeamInvitationNotification extends Notification
+class TeamInvitationNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    protected $team;
+    protected $invitation;
 
-    public function __construct($team)
+    public function __construct($invitation)
     {
-        $this->team = $team;
+        $this->invitation = $invitation;
     }
 
     public function via($notifiable)
@@ -25,19 +24,14 @@ class TeamInvitationNotification extends Notification
 
     public function toMail($notifiable)
     {
-        $url = URL::temporarySignedRoute(
-            'invitations.accept', // nombre de la ruta
-            now()->addDays(2),    // tiempo de expiración
-            [
-                'invitation' => encrypt($this->team->id), // puedes cifrar el ID por seguridad
-            ]
-        );
-    
+        $team = $this->invitation->team;
+        $frontUrl = env('FRONT_URL');
+
         return (new MailMessage)
             ->subject('Has sido invitado a un equipo')
             ->greeting("Hola {$notifiable->name},")
-            ->line("Te han invitado al equipo: {$this->team->name}")
-            ->action('Aceptar invitación', $url)
+            ->line("Te han invitado al equipo: {$team->name}")
+            ->action('Unirse al equipo', url("{$frontUrl}/teams/invite?token={$this->invitation->token}"))
             ->line('Gracias por usar nuestra aplicación.');
     }
 }

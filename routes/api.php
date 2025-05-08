@@ -23,6 +23,7 @@ Route::get('/users', [AuthController::class, 'users'])->name('users');
 Route::middleware('jwt')->prefix('teams')->group(function (){
     Route::post('/create',[TeamsController::class,'createTeam'])->name('teams.create');
     Route::get('/teams',[TeamsController::class,'teams'])->name('teams.teams');
+    Route::get('/acceptInvitation/{token}', [TeamsController::class,'acceptInvitation'])->name('teams.acceptInvitation');
 
 });
 
