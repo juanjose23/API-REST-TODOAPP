@@ -9,7 +9,7 @@ use App\Http\Controllers\AuthController;
 Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
-    
+
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/refresh', [AuthController::class, 'refresh']);
 
@@ -20,11 +20,12 @@ Route::prefix('auth')->group(function () {
 });
 Route::get('/users', [AuthController::class, 'users'])->name('users');
 
-Route::middleware('jwt')->prefix('teams')->group(function (){
-    Route::post('/create',[TeamsController::class,'createTeam'])->name('teams.create');
-    Route::get('/teams',[TeamsController::class,'teams'])->name('teams.teams');
-    Route::get('/acceptInvitation/{token}', [TeamsController::class,'acceptInvitation'])->name('teams.acceptInvitation');
-
+Route::middleware('jwt')->prefix('teams')->group(function () {
+    Route::post('/create', [TeamsController::class, 'createTeam'])->name('teams.create');
+    Route::get('/teams', [TeamsController::class, 'teams'])->name('teams.teams');
+    Route::get('/getInvitationByToken/{token}', [TeamsController::class, 'getInvitationByToken'])->name('teams.getInvitationByToken');
+    Route::get('listInvitation/{id}',[TeamsController::class, 'listInvitation'])->name('teams.listInvitation');
+    Route::post('/invitationResponse',[TeamsController::class, 'invitationResponse'])->name('teams.invitationResponse');
 });
 
 Route::middleware(['web'])->group(function () {

@@ -32,11 +32,22 @@ class TeamRepository implements TeamInterface
         $team->save();
         return $team;
     }
-
+    /**
+     * Summary of getAllTeams
+     * @param mixed $userId
+     * @return \Illuminate\Database\Eloquent\Collection<int, Team>
+     */
     public function getAllTeams($userId)
     {
-        // Logic to get all teams
-        return Team::where('is_active', true)->where('user_id', $userId)->with(['users', 'tasks'])->get();
+        return Team::where('is_active', true)
+            ->where(function ($query) use ($userId) {
+                $query->where('user_id', $userId)
+                    ->orWhereHas('members', function ($q) use ($userId) {
+                        $q->where('user_id', $userId);
+                    });
+            })
+            ->with(['users', 'tasks'])
+            ->get();
     }
 
     public function getTeamById($id)
@@ -44,13 +55,31 @@ class TeamRepository implements TeamInterface
         // Logic to get a team by ID
         return Team::where('id', $id)->where('is_active', true)->with(['users', 'tasks'])->first();
     }
-
-    public function addMemberToTeam($team, $userId, $role)
+    /**
+     * Summary of addMemberToTeam
+     * @param mixed $team
+     * @param mixed $userId
+     * @param mixed $role
+     */
+    public function addMemberToTeam($teamId, $userId, $role)
     {
-        // Logic to add a member to a team
-        $team->users()->attach($userId, ['role' => $role]);
-        return $team->users()->where('user_id', $userId)->first();
+
+        $team = Team::findOrFail($teamId);
+        $alreadyMember = $team->members()->where('user_id', $userId)->exists();
+
+        if ($alreadyMember) {
+
+            // $team->members()->updateExistingPivot($userId, ['roles' => $role]);
+
+            return response()->json(['message' => 'El usuario ya es miembro del equipo.'], 409);
+        }
+        $team->members()->attach($userId, ['roles' => $role]);
+
+        return $team->members()->where('user_id', $userId)->first();
     }
+
+
+
 
     public function inviteUserToTeam($team, $userId)
     {
@@ -72,15 +101,35 @@ class TeamRepository implements TeamInterface
 
         return $invitation;
     }
-
-    public function acceptInvitation($token)
+    public function listInvitation($userId)
     {
-        
+        return Invitation::with('team')
+            ->where('user_id', $userId)
+            ->get();
+    }
+
+    public function getInvitationByToken($token)
+    {
+
         return Invitation::with('team')
             ->where('token', $token)
             ->first();
     }
-    
+
+    public function invitationResponse($token, $status)
+    {
+        $invitation = Invitation::where('token', $token)->first();
+
+        if (!$invitation) {
+            return null;
+        }
+
+        $invitation->status = $status;
+        $invitation->save();
+
+        return $invitation;
+    }
+
 
     public function removeMemberFromTeam($team, $userId)
     {

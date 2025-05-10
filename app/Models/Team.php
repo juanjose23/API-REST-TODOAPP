@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Team extends Model
 {
     //
-   protected $table='teams';
+    protected $table = 'teams';
     protected $fillable = [
         'name',
         'description',
@@ -26,6 +26,13 @@ class Team extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function members()
+    {
+        return $this->belongsToMany(User::class, 'team_user', 'team_id', 'user_id')
+            ->withPivot('roles')
+            ->withTimestamps();
     }
 
     public function invitations()

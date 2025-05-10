@@ -71,10 +71,16 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(Task::class, 'assigned_to_id');
     }
 
-    public function teams()
-    {
-        return $this->belongsToMany(Team::class);
-    }
+    // public function teams()
+    // {
+    //     return $this->belongsToMany(Team::class);
+    // }
+  public function teams()
+{
+    return $this->belongsToMany(Team::class, 'team_user', 'user_id', 'team_id')
+                ->withPivot('roles')
+                ->withTimestamps();
+}
 
     public function teamsCreated()
     {

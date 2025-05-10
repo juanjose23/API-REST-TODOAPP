@@ -42,29 +42,41 @@ class TeamsController extends Controller
     {
         // Logic to delete a team
     }
-    public function getAllTeams()
-    {
-        // Logic to get all teams
 
-    }
     public function getTeamById($id)
     {
         // Logic to get a team by ID
     }
-    public function addMemberToTeam(Request $request, $teamId)
-    {
-        // Logic to add a member to a team
-    }
+ 
     public function removeMemberFromTeam($teamId, $userId)
     {
         // Logic to remove a member from a team
     }
 
-    public function acceptInvitation(string $token)
+    public function listInvitation(string $id)
     {
-        \Log::info($token);
-        $invitation = $this->teamServices->acceptInvitation($token);
+        $invitationList=$this->teamServices->listInvitation($id);
+        return response()->json($invitationList,201);
+    }
+
+    public function getInvitationByToken(string $token)
+    {
+        
+        $invitation = $this->teamServices->getInvitationByToken($token);
         return response()->json($invitation, 201);
+    }
+
+    public function invitationResponse(InvitationRequest $request)
+    {
+        $data =$request->validated();
+        $invitionResponse = $this->teamServices->invitationResponse($data['token'],$data['status']);
+        if($invitionResponse == null)
+        {
+            return response()->json(['message'=>'Invitation not found'],404);
+        }
+        else{
+            return response()->json(['message' => 'Updated status'], status: 200);
+        }
     }
 
 

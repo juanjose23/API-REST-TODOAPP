@@ -24,6 +24,7 @@ class InvitationRequest extends FormRequest
         return [
             //
             'token'=>'required|exists:invitations,token',
+            'status' => 'required|in:accepted,declined',
         ];
     }
 }

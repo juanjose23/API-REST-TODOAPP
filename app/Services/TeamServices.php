@@ -53,15 +53,43 @@ class TeamServices
         return $this->teamRepository->getAllTeams($userId);
     }
 
-    public function acceptInvitation($token)
+    /**
+     * Summary of listInvitation
+     * @param mixed $userId
+     * @return mixed|\Illuminate\Http\JsonResponse
+     */
+    public function listInvitation($userId)
     {
-        $invitation = $this->teamRepository->acceptInvitation($token);
+        $invitationList = $this->teamRepository->listInvitation($userId);
+
+        $result = $invitationList->map(function ($invitation) {
+            return [
+                'name' => $invitation->team->name,
+                'description' => $invitation->team->description,
+                'organizer' => $invitation->team->creator->name,
+                'email' => $invitation->team->creator->email,
+                'date' => $invitation->created_at,
+                'roles' => $invitation->roles,
+                'status' => $invitation->status,
+                'token' => $invitation->token,
+            ];
+        });
+
+        return response()->json($result, 200);
+    }
+    /**
+     * Summary of getInvitationByToken
+     * @param mixed $token
+     * @return mixed|\Illuminate\Http\JsonResponse
+     */
+    public function getInvitationByToken($token)
+    {
+        $invitation = $this->teamRepository->getInvitationByToken($token);
         if (!$invitation) {
             return response()->json(['message' => 'Invitation not found'], 404);
         }
 
-        if($invitation->team->creator->id == auth()->user()->id)
-        {
+        if ($invitation->team->creator->id == auth()->user()->id) {
             return response()->json(['message' => 'Invitation not found'], 404);
         }
 
@@ -69,11 +97,23 @@ class TeamServices
 
             'name' => $invitation->team->name,
             'description' => $invitation->team->description,
-            'organizer'=>$invitation->team->creator->name,
-            'email'=>$invitation->team->creator->email,
-            'date'=>$invitation->created_at,
+            'organizer' => $invitation->team->creator->name,
+            'email' => $invitation->team->creator->email,
+            'date' => $invitation->created_at,
             'roles' => $invitation->roles,
             'status' => $invitation->status,
         ], 200);
+    }
+    /**
+     * Summary of invitationResponse
+     * @param mixed $token
+     * @param mixed $status
+     */
+    public function invitationResponse($token, $status)
+    {
+        $invitationResponse = $this->teamRepository->invitationResponse($token, $status);
+
+        $this->teamRepository->addMemberToTeam($invitationResponse->team->id, $invitationResponse->user_id, $invitationResponse->roles);
+        return $invitationResponse;
     }
 }
